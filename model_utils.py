@@ -101,7 +101,7 @@ def returnH5PYDatasetDims(data_name='vis_dataX_dataY.h5'):
         print("dataX_sample.shape:", dataX_sample.shape)
         print("dataY_sample.shape:", dataY_sample.shape)
 #
-    (frame_h, frame_w, channels) = dataX_sample.shape  # (224,224,3)
+    (frame_h, frame_w, channels) = dataX_sample.shape  # (90,160,15)
     audio_vector_dim = dataY_sample.shape[0]
 #inputデータ（image）のshapeとoutputのgroundtruthのオーティオデータの型の次元を返す
     return frame_h, frame_w, channels, audio_vector_dim

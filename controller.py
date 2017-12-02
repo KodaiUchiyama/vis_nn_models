@@ -17,9 +17,7 @@ from exp_models.CNN_LSTM_models import *  # Contains the models we are testing
 from model_utils import *  # Contains some useful functions for loading datasets
 
 #########################
-#Set TITANX and data_name
-
-USE_TITANX = True  # Set to True if using the Linux Machine with TitanX
+#Set data_name
 data_name = 'vis_dataX_dataY.h5'  # Set to name of h5py dataset
 
 """
@@ -49,17 +47,17 @@ model_utils内の関数
                 frame_h = 90
                 frame_w = 160
                 channels = 15
-                audio_vector_dim = 18 = dataY_sample.shape[0]
+                audio_vector_dim = 42 = dataY_sample.shape[0]
         """
         frame_h, frame_w, channels, audio_vector_dim = returnH5PYDatasetDims(data_name=data_name)
 
         """Load full dataset as an HDF5 matrix object for use in Keras model
 
                 Example returns and corresponding matrix shapes:
-                    dataX_train.shape = (26000,100,100,3)
-                    dataY_train.shape = (26000,18)
-                    dataX_test.shape = (4000,100,100,3)test?
-                    dataY_test.shape = (4000,18)test?
+                    dataX_train.shape = (26000,90,160,15)
+                    dataY_train.shape = (26000,42)
+                    dataX_test.shape = (4000,90,160,15)
+                    dataY_test.shape = (4000,42)
         """
         dataX_train, dataY_train, dataX_test, dataY_test = load5hpyData(data_name=data_name)
 
@@ -83,7 +81,7 @@ model_utils内の関数
                   validation_data=(dataX_test, dataY_test),
                   verbose=1)
                   #callbacks = callbacks_list)
-        
+
 
         #可視化
         # フォルダの作成
@@ -91,7 +89,7 @@ model_utils内の関数
         folder = 'results/'
         if not os.path.exists(folder):
             os.makedirs(folder)
-        
+
         def plot_history_loss(fit):
             plt.plot(fit.history['loss'],label="loss for training")
             plt.plot(fit.history['val_loss'],label="loss for validation")
@@ -106,7 +104,7 @@ model_utils内の関数
         # Graph training history
         plotAndSaveData(loss_history, "Loss", learning_rate_hp=lr, weight_hp=ws, title="Loss History")
         plotAndSaveData(acc_history, "Accuracy", learning_rate_hp=lr, weight_hp=ws, title="Acc History")
-        
+
         # Save final accuracy
         final_accuracies.append(acc_history.test_acc[-1])
 
@@ -114,7 +112,7 @@ model_utils内の関数
         folder_name = '{lr:%s}-{ws:%s}' % (str(lr), str(ws))
         dir_path = makeDir(folder_name)  # dir_path = "../graphs/predicted_spectrums/{lr:0.000597}-{ws:0.000759}"
         # Run the model on some unseen data and save the predicted spectrums in the directory defined previously
-        
+
         genAndSavePredSpectrum(model,
                                dir_path,
                                window_length = 300,

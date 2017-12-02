@@ -33,7 +33,7 @@ def CNN_LSTM_model(image_dim, audio_vector_dim, learning_rate=0.4e-6, weight_ini
                name='Input_Layer',
                activation='relu',
                padding='same',
-               kernel_initializer=RandomNormal(mean=0.0, stddev=weight_init, seed=None),
+               kernel_initializer=RandomNormal(mean=0.0, stddev=weight_init, seed=None),#正規分布に従って重みを初期化,stddev=weight_init = 0.01 分布の標準偏差
                strides=(8, 8))(input_img)
 
     x = Conv2D(filters=64,
