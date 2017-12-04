@@ -37,51 +37,53 @@ def getModel(model_name):
 ####################
 # Data related Utils
 #データをセットをロードしたのち返す関数
-def load5hpyData(data_name='vis_dataX_dataY.h5'):
-    """Load h5py data and return HDF5 object corresponding to X_train, Y_train, X_test, Y_test
-
-        Args:
-            USE_TITANX (boolean): set True if using the Linux Computer with TITANX
-            data_name (string): name of the dataset e.g 'TopAngle100_dataX_dataY.h5'
-
+def load5hpyTrainData(data_name):
+    """Load h5py data and return HDF5 object corresponding to X_train, Y_train
         Returns:
             dataX_train (HDF5Matrix object): keras object for loading h5py datasets
             dataY_train (HDF5Matrix object): keras object for loading h5py datasets
-            dataX_test (HDF5Matrix object): keras object for loading h5py datasets
-            dataY_test (HDF5Matrix object): keras object for loading h5py datasets
-
     """
-
-    data_dir = '/home/KODAI/MATLAB_vis_gcp/'
+    data_dir = '/home/KODAI/MATLAB_vis_master/'
     data_file = data_dir + data_name  # data_name = 'TopAngle100_dataX_dataY.h5' by default
 
     # Load first element of data to extract information on video
     with h5py.File(data_file, 'r') as hf:
-        print("Reading fukk data from file..")
+        print("Reading train data from file..")
         dataX_train = hf['dataX_train']  # Adding the [:] actually loads it into memory
         dataY_train = hf['dataY_train']
-        dataX_test = hf['dataX_test']
-        dataY_test = hf['dataY_test']
         print("dataX_train.shape:", dataX_train.shape)
         print("dataY_train.shape:", dataY_train.shape)
-        print("dataX_test.shape:", dataX_test.shape)
-        print("dataY_test.shape:", dataY_test.shape)
 
     # Load data into HDF5Matrix object, which reads the file from disk and does not put it into RAM
     dataX_train = HDF5Matrix(data_file, 'dataX_train')
     dataY_train = HDF5Matrix(data_file, 'dataY_train')
+
+    return dataX_train, dataY_train
+def load5hpyTestData(data_name):
+    """Load h5py data and return HDF5 object corresponding to X_test, Y_test
+        Returns:
+            dataX_test (HDF5Matrix object): keras object for loading h5py datasets
+            dataY_test (HDF5Matrix object): keras object for loading h5py datasets
+    """
+    data_dir = '/home/KODAI/MATLAB_vis_master/'
+    data_file = data_dir + data_name  # data_name = 'TopAngle100_dataX_dataY.h5' by default
+
+    # Load first element of data to extract information on video
+    with h5py.File(data_file, 'r') as hf:
+        print("Reading test data from file..")
+        dataX_test = hf['dataX_test']
+        dataY_test = hf['dataY_test']
+        print("dataX_test.shape:", dataX_test.shape)
+        print("dataY_test.shape:", dataY_test.shape)
+
+    # Load data into HDF5Matrix object, which reads the file from disk and does not put it into RAM
     dataX_test = HDF5Matrix(data_file, 'dataX_test')
     dataY_test = HDF5Matrix(data_file, 'dataY_test')
 
-    return dataX_train, dataY_train, dataX_test, dataY_test
+    return dataX_test, dataY_test
 #データベースから一つサンプルを取り出してデータセットの型を返す関数
-def returnH5PYDatasetDims(data_name='vis_dataX_dataY.h5'):
+def returnH5PYDatasetDims(data_name='vis_train_dataX_dataY.h5'):
     """Load h5py data and return the dimensions of data in the dataet
-
-            Args:
-                USE_TITANX (boolean): set True if using the Linux Computer with TITANX
-                data_name (string): name of the dataset e.g 'TopAngle100_dataX_dataY.h5'
-
             Returns:
                 frame_h (int): image height
                 frame_w (int): image width
@@ -90,8 +92,7 @@ def returnH5PYDatasetDims(data_name='vis_dataX_dataY.h5'):
 
             """
 
-    data_dir = '/home/KODAI/MATLAB_vis_gcp/'
-
+    data_dir = '/home/KODAI/MATLAB_vis_master/'
     data_file = data_dir + data_name  # data_name = 'vis_dataX_dataY.h5' by default
 
     with h5py.File(data_file, 'r') as hf:
@@ -195,38 +196,38 @@ def makeDir(dir_name):
                   dir_name (string): complete relative directory name e.g "../graphs/predicted_spectrums/{lr:0.000597}-{ws:0.000759}"
     """
 
-    dir_name = '../graphs/predicted_spectrums/' + dir_name
-    #print (os.path.exists(dir_name))
-    if not os.path.exists(dir_name):
+    dir_path = 'results/' + dir_name
+    print("Make directory for save predicted spectrums...")
+    print(os.path.exists(dir_path))
+    if not os.path.exists(dir_path):
         try:
-            os.makedirs(dir_name)
+            os.makedirs(dir_path)
         except OSError as exc:  # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
-    return dir_name
+    return dir_path
 
 
-#テストデータセットに対してモデルが適応されたとき予測されたスペクトラムを生成して保存する関数
-def genAndSavePredSpectrum(model,save_img_path, window_length = 300, data_name='vis_dataX_dataY.h5'):
+#テストデータセット(１動画についての生成かも！)に対してモデルが適応されたとき予測されたスペクトラムを生成して保存する関数
+def genAndSavePredSpectrum(model,save_img_path, window_length = 300, data_name='vis_test_dataX_dataY.h5'):
     """Generates and saves predicted spectrums when using the model on an unseen test set
 テストデータセットに対してモデルが適応されたとき予測されたスペクトラムを生成して保存する
               Args:
                   model (Keras model object): model created during training
                   save_img_path (string): path where to save images e.g "../graphs/predicted_spectrums/{lr:0.000597}-{ws:0.000759}"
                   window_length (int): length of predicted window. Default = 300
-                  USE_TITANX (boolean): set True if using the Linux Computer with TITANX
                   data_name (string): name of the dataset e.g 'TopAngle100_dataX_dataY.h5'
 
               Returns:
                   None
         """
     # Define the external SSD where the dataset resides in
-    data_dir = '/home/KODAI/MATLAB_vis_gcp/'
+    data_dir = '/home/KODAI/MATLAB_vis_master/'
     file_name = data_dir + data_name
-
+    print("Generate predicted spectrums...")
     # Open the h5py file
     with h5py.File(file_name, 'r') as hf:
-        print("Reading data from file..")
+        print("Reading test data from file..")
         dataX_test = hf['dataX_test'][:]
         dataY_test = hf['dataY_test'][:]
     print("dataX_test.shape:", dataX_test.shape)
@@ -250,28 +251,30 @@ def genAndSavePredSpectrum(model,save_img_path, window_length = 300, data_name='
         trainPredict = model.predict(dataX_test)
         trainScore = math.sqrt(mean_squared_error(dataY_test[pred_idx:end_idx, :], trainPredict[pred_idx:end_idx, :]))
         print('Train score: %.3f RMSE' % (trainScore))#平均平方二乗誤差
-#
+
         ##### PLOT RESULTS
         trainPlot = model.predict(dataX_test[pred_idx:end_idx, :])
         print(trainPlot.shape)
         plt.subplot(3, 1, 1)
-        plt.imshow(trainPlot.T, aspect='auto')
-        plt.title('Model prediction')
+        plt.imshow(trainPlot.T, aspect='auto')# (pred_idx:end_idx , 42) > (42 , pred_idx:end_idx)
+        plt.title('Predicted feature')
         plt.ylabel('Note bins')
         plt.xlabel('Time (frames)')
+
         plt.subplot(3, 1, 2)
         plt.title('Ground Truth')
         plt.ylabel('Note bins')
         plt.xlabel('Time (frames)')
+        #注釈を付ける
         plt.annotate('RMSE: %.3f' % (trainScore), xy=(5, 5), xytext=(5, 33))
-        plt.imshow(dataY_test[pred_idx:end_idx, :].T, aspect='auto')
+        plt.imshow(dataY_test[pred_idx:end_idx, :].T, aspect='auto')# (pred_idx:end_idx , 42) > (42 , pred_idx:end_idx)
+
         plt.subplot(3, 1, 3)
         plt.imshow(dataY_test[pred_idx:end_idx, :].T, aspect='auto')
         plt.colorbar()
-        plt.tight_layout()
+        plt.tight_layout()#図の調整
         plt.draw()
         plt.savefig(save_img_path + str(i) + '.png')  # ../graphs/predicted_spectrums/{lr:0.000597}-{ws:0.000759}/1.png
-        # plt.show()
         plt.close()
 #Once all trials are complete, make a 3D plot that graphs x: learning rate, y: weight scale and z: final_accuracy
 def plotAndSaveSession(learning_rates,weight_scales,final_accuracies):
