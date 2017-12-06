@@ -37,10 +37,12 @@ def main():
     for i in range(num_trials):
 
         # random search over logarithmic space of hyperparameters
-        lr = 10**np.random.uniform(-3.0,-6.0)
-        ws = 10**np.random.uniform(-2.0,-4.0)
-        learning_rates.append(lr)
-        weight_scales.append(ws)
+        #lr = 10**np.random.uniform(-3.0,-6.0)
+        lr = 0.1
+        #ws = 10**np.random.uniform(-2.0,-4.0)
+        ws = 0.01
+        #learning_rates.append(lr)
+        #weight_scales.append(ws)
 
         """Read a sample from h5py dataset and return key dimensions
 model_utils内の関数
@@ -50,7 +52,7 @@ model_utils内の関数
                 channels = 15
                 audio_vector_dim = 42 = dataY_sample.shape[0]
         """
-        frame_h, frame_w, channels, audio_vector_dim = returnH5PYDatasetDims(data_name = 'vis_train_dataX_dataY.h5')
+        frame_h, frame_w, channels, audio_vector_dim = returnH5PYDatasetDims(data_name='vis_train_dataX_dataY.h5')
 
         """Load full dataset as an HDF5 matrix object for use in Keras model
 
@@ -78,8 +80,8 @@ model_utils内の関数
         fit=model.fit(dataX_train,
                   dataY_train,
                   shuffle='batch',
-                  epochs=20,
-                  batch_size=100,  # 10000 is the maximum number of samples that fits on TITANX 12GB Memory
+                  epochs=5,
+                  batch_size=1000,  # 10000 is the maximum number of samples that fits on TITANX 12GB Memory
                   validation_data=(dataX_test, dataY_test),
                   verbose=1)
                   #callbacks = callbacks_list)

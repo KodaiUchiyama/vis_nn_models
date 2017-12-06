@@ -14,7 +14,7 @@ import h5py
 #from exp_models.my_callback import *
 import time
 from keras.utils.io_utils import HDF5Matrix
-def CNN_LSTM_model(image_dim, audio_vector_dim, learning_rate=0.4e-6, weight_init=0.01):#(224,224,3)timespace-imageセット3枚
+def CNN_LSTM_model(image_dim, audio_vector_dim, learning_rate, weight_init):#(224,224,3)timespace-imageセット3枚
     (img_rows, img_cols, img_channels) = image_dim  # (224,224,3)*hoge=extract_cont_TopAngles.pyで最後に繋げた長さがtraining_data数
     input_img = Input(shape=(img_rows, img_cols, img_channels))
 
@@ -74,9 +74,10 @@ def CNN_LSTM_model(image_dim, audio_vector_dim, learning_rate=0.4e-6, weight_ini
     model = Model(inputs=input_img, outputs=network_output)
 
     # Use the Adam optimizer for gradient descent
-    adam = Adam(lr=learning_rate)
-
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    #adam = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    sgd  = SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
+    #print("learning rate:",learning_rate)    
+    model.compile(loss='mean_squared_error', optimizer='sgd')
     print(model.summary())
 
     return model
@@ -136,7 +137,7 @@ def CNN_LSTM_STATEFUL_model(image_dim, audio_vector_dim):
     model = Model(inputs=input_img, outputs=network_output)
 
     # Use the Adam optimizer for gradient descent
-    adam = Adam(lr=0.4e-6)
+    adam = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
     model.compile(loss='mean_squared_error', optimizer='adam')
     print(model.summary())
