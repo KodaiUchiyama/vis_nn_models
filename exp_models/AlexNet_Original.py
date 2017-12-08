@@ -86,12 +86,12 @@ def create_model():
 
     # Channel 1 - Conv Net Layer
     x = Conv2D(48, 11, strides=4, activation='relu', padding='same')(img_input)
-    x = MaxPooling2D(3, strides=2)(x)
+    x = MaxPooling2D(pool_size=(3, 3), strides=None)(x)
     x = BatchNormalization()(x)
 
     # Channel 2 - Conv Net Layer 1
     y = Conv2D(48, 11, strides=4, activation='relu', padding='same')(img_input)
-    y = MaxPooling2D(3, strides=2)(y)
+    y = MaxPooling2D(pool_size=(3, 3), strides=None)(y)
     y = BatchNormalization()(y)
     '''
     x = conv2D_bn(img_input, 3, 11, 11, subsample=(1, 1), border_mode='same')
@@ -114,13 +114,13 @@ def create_model():
     '''
 
     # Channel 1 - Conv Net Layer 3
-    x = Conv2D(128, 5, strides=3, activation='relu', padding='same')(x)
-    x = MaxPooling2D(3, strides=2)(x)
+    x = Conv2D(128, 5, activation='relu', padding='same')(x)
+    x = MaxPooling2D(pool_size=(3, 3), strides=None)(x)
     x = BatchNormalization()(x)
 
     # Channel 2 - Conv Net Layer 3
-    y = Conv2D(128, 5, strides=3, activation='relu', padding='same')(y)
-    y = MaxPooling2D(3, strides=2)(y)
+    y = Conv2D(128, 5, activation='relu', padding='same')(y)
+    y = MaxPooling2D(pool_size=(3, 3), strides=None)(y)
     y = BatchNormalization()(y)
     '''
     x = conv2D_bn(x, 128, 27, 27, subsample=(1, 1), border_mode='same')
@@ -132,11 +132,11 @@ def create_model():
     '''
     # Channel 1 - Conv Net Layer 4
     x1 = keras.layers.concatenate([x, y])
-    x1 = Conv2D(192, 3, strides=, activation='relu', padding='same')(x1)
+    x1 = Conv2D(192, 3, activation='relu', padding='same')(x1)
 
     # Channel 2 - Conv Net Layer 4
     y1 = keras.layers.concatenate([x, y])
-    y1 = Conv2D(192, 3, strides=, activation='relu', padding='same')(y1)
+    y1 = Conv2D(192, 3, activation='relu', padding='same')(y1)
     '''
     x1 = merge([x, y], mode='concat', concat_axis=CONCAT_AXIS)
     x1 = ZeroPadding2D(padding=(1, 1), dim_ordering=DIM_ORDERING)(x1)
@@ -147,11 +147,11 @@ def create_model():
     '''
     # Channel 1 - Conv Net Layer 5
     x2 = keras.layers.concatenate([x1, y1])
-    x2 = Conv2D(192, 3, strides=, activation='relu', padding='same')(x2)
+    x2 = Conv2D(192, 3, activation='relu', padding='same')(x2)
 
     # Channel 2 - Conv Net Layer 5
     y2 = keras.layers.concatenate([x1, y1])
-    y2 = Conv2D(192, 3, strides=, activation='relu', padding='same')(y2)
+    y2 = Conv2D(192, 3, activation='relu', padding='same')(y2)
     '''
     y2 = merge([x1, y1], mode='concat', concat_axis=CONCAT_AXIS)
     y2 = ZeroPadding2D(padding=(1, 1), dim_ordering=DIM_ORDERING)(y2)
@@ -164,11 +164,11 @@ def create_model():
 
     # Channel 1 - Cov Net Layer 6
     x3 = keras.layers.concatenate([x2, y2])
-    x3 = Conv2D(128, 3, strides=, activation='relu', padding='same')(x3)
+    x3 = Conv2D(128, 3, activation='relu', padding='same')(x3)
 
     # Channel 2 - Cov Net Layer 6
     y3 = keras.layers.concatenate([x2, y2])
-    y3 = Conv2D(128, 3, strides=, activation='relu', padding='same')(y3)
+    y3 = Conv2D(128, 3, activation='relu', padding='same')(y3)
     '''
     x3 = conv2D_bn(x2, 128, 27, 27, subsample=(1, 1), border_mode='same')
     x3 = MaxPooling2D(strides=(2, 2), pool_size=(2, 2), dim_ordering=DIM_ORDERING)(x3)
