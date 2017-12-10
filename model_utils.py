@@ -51,14 +51,17 @@ def load5hpyTrainData(data_name):
         print("Reading train data from file..")
         dataX_train = hf['dataX_train']  # Adding the [:] actually loads it into memory
         dataY_train = hf['dataY_train']
+        dataZ_train = hf['dataZ_train']
         print("dataX_train.shape:", dataX_train.shape)
         print("dataY_train.shape:", dataY_train.shape)
+        print("dataZ_train.shape:", dataZ_train.shape)
 
     # Load data into HDF5Matrix object, which reads the file from disk and does not put it into RAM
     dataX_train = HDF5Matrix(data_file, 'dataX_train')
     dataY_train = HDF5Matrix(data_file, 'dataY_train')
+    dataZ_train = HDF5Matrix(data_file, 'dataZ_train')
 
-    return dataX_train, dataY_train
+    return dataX_train, dataY_train, dataZ_train
 def load5hpyTestData(data_name):
     """Load h5py data and return HDF5 object corresponding to X_test, Y_test
         Returns:

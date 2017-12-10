@@ -1,98 +1,40 @@
-"""
-    Model Name:
-
-        AlexNet - using the Functional Keras API
-
-        Replicated from the Original AlexNet Paper
-
-    Paper:
-
-         ImageNet classification with deep convolutional neural networks by Krizhevsky et al. in NIPS 2012
-
-    Alternative Example:
-
-        Available at: http://caffe.berkeleyvision.org/model_zoo.html
-
-        https://github.com/uoguelph-mlrg/theano_alexnet/tree/master/pretrained/alexnet
-
-    Original Dataset:
-
-        ILSVRC 2012
-
-"""
-from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
-from keras.layers import Flatten, Dense, Dropout, Activation
-from keras.layers import Input, BatchNormalization
+# coding:utf-8
+import os
+from keras.models import save_model
+from keras.initializers import RandomNormal
+from keras.layers import Input, Dense, BatchNormalization
 from keras.models import Model
-
+from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape
+from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
+from keras.optimizers import SGD, Adam
+from keras.layers import Dense, Dropout,concatenate,multiply
+from keras.layers import LSTM
+from keras.utils.io_utils import HDF5Matrix
+import h5py
+#from exp_models.my_callback import *
+import time
+from keras.utils.io_utils import HDF5Matrix
 
 # global constants
-NB_CLASS = 1000         # number of classes
-LEARNING_RATE = 0.01
-MOMENTUM = 0.9
-GAMMA = 0.1
 DROPOUT = 0.5
-WEIGHT_DECAY = 0.0005   # L2 regularization factor
-USE_BN = True           # whether to use batch normalization
-# Theano - 'th' (channels, width, height)
-# Tensorflow - 'tf' (width, height, channels)
-#DIM_ORDERING = 'th'
 
-'''
-def conv2D_bn(x, nb_filter, nb_row, nb_col,
-              border_mode='same', subsample=(1, 1),
-              activation='relu', batch_norm=USE_BN,
-              weight_decay=WEIGHT_DECAY, dim_ordering=DIM_ORDERING):
-    '''
-
-        Info:
-            Function taken from the Inceptionv3.py script keras github
-
-
-            Utility function to apply to a tensor a module conv + BN
-            with optional weight decay (L2 weight regularization).
-    '''
-    if weight_decay:
-        W_regularizer = regularizers.l2(weight_decay)
-        b_regularizer = regularizers.l2(weight_decay)
-    else:
-        W_regularizer = None
-        b_regularizer = None
-
-    x = Conv2D(nb_filter, nb_row, nb_col,
-                      subsample=subsample,
-                      activation=activation,
-                      border_mode=border_mode,
-                      W_regularizer=W_regularizer,
-                      b_regularizer=b_regularizer,
-                      dim_ordering=dim_ordering)(x)
-    x = ZeroPadding2D(padding=(1, 1), dim_ordering=DIM_ORDERING)(x)
-
-    if batch_norm:
-        x = BatchNormalization()(x)
-        x = ZeroPadding2D(padding=(1, 1), dim_ordering=DIM_ORDERING)(x)
-
-    return x
-'''
-
-def create_model():
+def create_model(image_dim, audio_vector_dim, learning_rate, weight_init,output_dim,optimizer):
 
     # Define image input layer
-    DIM_ORDERING == 'tf'
-    INP_SHAPE = (224, 224, 3)  # 3 - Number of RGB Colours
-    img_input = Input(shape=INP_SHAPE)
-    CONCAT_AXIS = 3
-
+    (img_rows, img_cols, img_channels) = image_dim
+    input_spacetime_img = Input(shape=(img_rows, img_cols, img_channels))
+    input_rgb_img = Input(shape=(img_rows, img_cols, img_channels))
 
     # Channel 1 - Conv Net Layer
-    x = Conv2D(48, 11, strides=4, activation='relu', padding='same')(img_input)
-    x = MaxPooling2D(pool_size=(3, 3), strides=None)(x)
+    x = Conv2D(48, 11, strides=4, activation='relu', padding='same')(input_spacetime_img)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
     x = BatchNormalization()(x)
 
     # Channel 2 - Conv Net Layer 1
-    y = Conv2D(48, 11, strides=4, activation='relu', padding='same')(img_input)
-    y = MaxPooling2D(pool_size=(3, 3), strides=None)(y)
+    y = Conv2D(48, 11, strides=4, activation='relu', padding='same')(input_rgb_img)
+    y = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(y)
     y = BatchNormalization()(y)
+
     '''
     x = conv2D_bn(img_input, 3, 11, 11, subsample=(1, 1), border_mode='same')
     x = MaxPooling2D(strides=(4, 4), pool_size=(4, 4), dim_ordering=DIM_ORDERING)(x)
@@ -115,12 +57,12 @@ def create_model():
 
     # Channel 1 - Conv Net Layer 3
     x = Conv2D(128, 5, activation='relu', padding='same')(x)
-    x = MaxPooling2D(pool_size=(3, 3), strides=None)(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
     x = BatchNormalization()(x)
 
     # Channel 2 - Conv Net Layer 3
     y = Conv2D(128, 5, activation='relu', padding='same')(y)
-    y = MaxPooling2D(pool_size=(3, 3), strides=None)(y)
+    y = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(y)
     y = BatchNormalization()(y)
     '''
     x = conv2D_bn(x, 128, 27, 27, subsample=(1, 1), border_mode='same')
@@ -131,12 +73,10 @@ def create_model():
     y = ZeroPadding2D(padding=(1, 1), dim_ordering=DIM_ORDERING)(y)
     '''
     # Channel 1 - Conv Net Layer 4
-    x1 = keras.layers.concatenate([x, y])
-    x1 = Conv2D(192, 3, activation='relu', padding='same')(x1)
+    x = Conv2D(192, 3, activation='relu', padding='same')(x)
 
     # Channel 2 - Conv Net Layer 4
-    y1 = keras.layers.concatenate([x, y])
-    y1 = Conv2D(192, 3, activation='relu', padding='same')(y1)
+    y = Conv2D(192, 3, activation='relu', padding='same')(y)
     '''
     x1 = merge([x, y], mode='concat', concat_axis=CONCAT_AXIS)
     x1 = ZeroPadding2D(padding=(1, 1), dim_ordering=DIM_ORDERING)(x1)
@@ -146,12 +86,10 @@ def create_model():
     y1 = conv2D_bn(y1, 192, 13, 13, subsample=(1, 1), border_mode='same')
     '''
     # Channel 1 - Conv Net Layer 5
-    x2 = keras.layers.concatenate([x1, y1])
-    x2 = Conv2D(192, 3, activation='relu', padding='same')(x2)
+    x = Conv2D(192, 3, activation='relu', padding='same')(x)
 
     # Channel 2 - Conv Net Layer 5
-    y2 = keras.layers.concatenate([x1, y1])
-    y2 = Conv2D(192, 3, activation='relu', padding='same')(y2)
+    y = Conv2D(192, 3, activation='relu', padding='same')(y)
     '''
     y2 = merge([x1, y1], mode='concat', concat_axis=CONCAT_AXIS)
     y2 = ZeroPadding2D(padding=(1, 1), dim_ordering=DIM_ORDERING)(y2)
@@ -163,12 +101,14 @@ def create_model():
     '''
 
     # Channel 1 - Cov Net Layer 6
-    x3 = keras.layers.concatenate([x2, y2])
-    x3 = Conv2D(128, 3, activation='relu', padding='same')(x3)
+    x = Conv2D(128, 3, activation='relu', padding='same')(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
+    x = BatchNormalization()(x)
 
     # Channel 2 - Cov Net Layer 6
-    y3 = keras.layers.concatenate([x2, y2])
-    y3 = Conv2D(128, 3, activation='relu', padding='same')(y3)
+    y = Conv2D(128, 3, activation='relu', padding='same')(y)
+    y = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(y)
+    y = BatchNormalization()(y)
     '''
     x3 = conv2D_bn(x2, 128, 27, 27, subsample=(1, 1), border_mode='same')
     x3 = MaxPooling2D(strides=(2, 2), pool_size=(2, 2), dim_ordering=DIM_ORDERING)(x3)
@@ -180,13 +120,13 @@ def create_model():
     '''
 
     # Channel 1 - Cov Net Layer 7
-    x4 = keras.layers.multiply([x3, y3])
+    x4 = multiply([x, y])
     x4 = Flatten()(x4)
     x4 = Dense(2048, activation='relu')(x4)
     x4 = Dropout(DROPOUT)(x4)
 
     # Channel 2 - Cov Net Layer 7
-    y4 = keras.layers.multiply([x3, y3])
+    y4 = multiply([x, y])
     y4 = Flatten()(y4)
     y4 = Dense(2048, activation='relu')(y4)
     y4 = Dropout(DROPOUT)(y4)
@@ -203,14 +143,14 @@ def create_model():
     y4 = Dropout(DROPOUT)(y4)
     '''
     # Channel 1 - Cov Net Layer 8
-    x5 = keras.layers.multiply([x4, y4])
-    x5 = Flatten()(x5)
+    x5 = multiply([x4, y4])
+    #x5 = Flatten()(x5)#ここのflatten必要かmargeしてるから必要なのかも
     x5 = Dense(2048, activation='relu')(x5)
     x5 = Dropout(DROPOUT)(x5)
 
     # Channel 2 - Cov Net Layer 8
-    y5 = keras.layers.multiply([x4, y4])
-    y5 = Flatten()(y5)
+    y5 = multiply([x4, y4])
+    #y5 = Flatten()(y5)
     y5 = Dense(2048, activation='relu')(y5)
     y5 = Dropout(DROPOUT)(y5)
     '''
@@ -224,24 +164,18 @@ def create_model():
     '''
 
     # Final Channel - Cov Net 9
-    xy = keras.layers.multiply([x5, y5])
-    '''
-    xy = merge([x5, y5], mode='mul')
-    xy = Dense(output_dim=NB_CLASS,activation='softmax')(xy)
+    xy = concatenate([x5, y5])
 
-    return xy, img_input, CONCAT_AXIS, INP_SHAPE, DIM_ORDERING
-    '''
+    #y Note that LSTM expects input shape: (nb_samples, timesteps, feature_dim)
+    xy = Reshape((1, 4096))(xy)
+    xy = LSTM(256, input_shape=(1, 4096), dropout=0.2, return_sequences=True)(xy)
+    xy = LSTM(256, dropout=0.2, name='LSTM_reg_output')(xy)
+    network_output = Dense(output_dim)(xy)#最後にオーディオデータの次元数にあわせる
 
-def check_print():
-    # Create the Model
-    xy, img_input, CONCAT_AXIS, INP_SHAPE, DIM_ORDERING = create_model()
-
-    # Create a Keras Model - Functional API
-    model = Model(input=img_input,output=[xy])
-    model.summary()
-
-    # Save a PNG of the Model Build
-    #plot(model, to_file='./Model/AlexNet_Original.png')
-
-    #model.compile(optimizer='rmsprop',loss='categorical_crossentropy')
-    #print('Model Compiled')
+    model = Model(input=[input_spacetime_img,input_rgb_img], output=network_output)
+    # Use the Adam optimizer for gradient descent
+    adam = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    sgd  = SGD(lr=learning_rate, momentum=0.0, decay=0.0, nesterov=False)
+    #print("learning rate:",learning_rate)
+    model.compile(loss='mean_squared_error', optimizer=optimizer)
+    print(model.summary())

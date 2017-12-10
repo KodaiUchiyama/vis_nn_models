@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import os
 from exp_models.CNN_LSTM_models import *  # Contains the models we are testing
 from exp_models.ALEX_models import *
+from exp_models.AlexNet_Original import *
 from model_utils import *  # Contains some useful functions for loading datasets
 from keras.models import load_model
 from sklearn.decomposition import PCA
@@ -44,7 +45,9 @@ def main():
         #ws = 10**np.random.uniform(-2.0,-4.0)
         ws = 0.01
         #learning_rates.append(lr)
+        output_dim = 10
         #weight_scales.append(ws)
+        optimizer = 'sgd'
 
         """Read a sample from h5py dataset and return key dimensions
 model_utils内の関数
@@ -64,7 +67,7 @@ model_utils内の関数
                     dataX_test.shape = (4000,90,160,15)
                     dataY_test.shape = (4000,42)
         """
-        dataX_train, dataY_train = load5hpyTrainData(data_name = train_data_name)
+        dataX_train, dataY_train, dataZ_train = load5hpyTrainData(data_name = train_data_name)
         #dataX_test, dataY_test = load5hpyTestData(data_name = test_data_name)
 
         # dataYを主成分分析して42次元から10次元に次元削減する
@@ -94,22 +97,24 @@ model_utils内の関数
                                learning_rate=lr,
                                weight_init=ws)
         '''
-        model = AlexNet_model(image_dim=(frame_h,frame_w,channels),
-                               audio_vector_dim=audio_vector_dim,
-                               learning_rate=lr,
-                               weight_init=ws)
+        model = create_model(image_dim=(frame_h,frame_w,channels),
+                              audio_vector_dim=audio_vector_dim,
+                              learning_rate=lr,
+                              weight_init=ws,
+                              output_dim=output_dim,
+                              optimizer=optimizer)
         # load custom callbacksカスタムコールバック!?あとでサーベイ
         #loss_history = LossHistory()
         #acc_history = AccuracyHistory()
         #callbacks_list = [loss_history, acc_history]
 
-        # train the model
-        fit=model.fit(dataX_train,
+        # train the model #IMPUT space time image & RGB image , OUTPUT decomposed audio vector
+        fit=model.fit([dataX_train , dataZ_train],
                   dataY_train_pca,
                   shuffle='batch',
                   epochs=10,
                   batch_size=20,  # 10000 is the maximum number of samples that fits on TITANX 12GB Memory
-                  #validation_data=(dataX_test, dataY_test),
+                  #validation_data=([dataX_test,dataZ_test], dataY_test),
                   verbose=1)
                   #callbacks = callbacks_list)
         model.save('my_model.h5')
