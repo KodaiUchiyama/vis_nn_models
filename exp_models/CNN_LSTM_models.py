@@ -69,15 +69,16 @@ def CNN_LSTM_model(image_dim, audio_vector_dim, learning_rate, weight_init):#(22
     x = LSTM(256, input_shape=(1, 512), dropout=0.2, return_sequences=True)(x)
     x = Dropout(0.2)(x)
     x = LSTM(128, dropout=0.2, name='LSTM_reg_output')(x)
-    network_output = Dense(audio_vector_dim)(x)#最後にオーディオデータの次元数にあわせる
+    #network_output = Dense(audio_vector_dim)(x)#最後にオーディオデータの次元数にあわせる
+    network_output = Dense(10)(x)#最後にオーディオデータの次元数にあわせる
 
     model = Model(inputs=input_img, outputs=network_output)
 
     # Use the Adam optimizer for gradient descent
-    #adam = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    sgd  = SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
-    #print("learning rate:",learning_rate)    
-    model.compile(loss='mean_squared_error', optimizer='sgd')
+    adam = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    #sgd  = SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
+    print("learning rate:",learning_rate)    
+    model.compile(loss='mean_squared_error', optimizer='adam')
     print(model.summary())
 
     return model

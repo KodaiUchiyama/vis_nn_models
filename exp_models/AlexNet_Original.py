@@ -7,16 +7,15 @@ from keras.models import Model
 from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import SGD, Adam
-from keras.layers import Dense, Dropout,concatenate,multiply
+from keras.layers import Dense, Dropout, concatenate, multiply
 from keras.layers import LSTM
 from keras.utils.io_utils import HDF5Matrix
 import h5py
 #from exp_models.my_callback import *
 import time
-from keras.utils.io_utils import HDF5Matrix
 
 # global constants
-DROPOUT = 0.5
+DROPOUT = 0.2
 
 def create_model(image_dim, audio_vector_dim, learning_rate, weight_init,output_dim,optimizer):
 
@@ -144,13 +143,11 @@ def create_model(image_dim, audio_vector_dim, learning_rate, weight_init,output_
     '''
     # Channel 1 - Cov Net Layer 8
     x5 = multiply([x4, y4])
-    #x5 = Flatten()(x5)#ここのflatten必要かmargeしてるから必要なのかも
     x5 = Dense(2048, activation='relu')(x5)
     x5 = Dropout(DROPOUT)(x5)
 
     # Channel 2 - Cov Net Layer 8
     y5 = multiply([x4, y4])
-    #y5 = Flatten()(y5)
     y5 = Dense(2048, activation='relu')(y5)
     y5 = Dropout(DROPOUT)(y5)
     '''
@@ -179,3 +176,4 @@ def create_model(image_dim, audio_vector_dim, learning_rate, weight_init,output_
     #print("learning rate:",learning_rate)
     model.compile(loss='mean_squared_error', optimizer=optimizer)
     print(model.summary())
+    return model
