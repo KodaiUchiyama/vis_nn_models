@@ -9,7 +9,7 @@ import matplotlib.patches as mpatches
 import os, errno
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-
+import gc
 #####################
 # Model related utils
 '''
@@ -49,19 +49,24 @@ def load5hpyTrainData(data_name):
     # Load first element of data to extract information on video
     with h5py.File(data_file, 'r') as hf:
         print("Reading train data from file..")
-        dataX_train = hf['dataX_train']  # Adding the [:] actually loads it into memory
-        dataY_train = hf['dataY_train']
-        dataZ_train = hf['dataZ_train']
-        print("dataX_train.shape:", dataX_train.shape)
-        print("dataY_train.shape:", dataY_train.shape)
-        print("dataZ_train.shape:", dataZ_train.shape)
+        #dataX_train = hf['dataX_train']  # Adding the [:] actually loads it into memory
+        #dataY_train = hf['dataY_train']
+        #dataZ_train = hf['dataZ_train']
+        #print("dataX_train.shape:", dataX_train.shape)
+        #print("dataY_train.shape:", dataY_train.shape)
+        #print("dataZ_train.shape:", dataZ_train.shape)
 
     # Load data into HDF5Matrix object, which reads the file from disk and does not put it into RAM
-    dataX_train = HDF5Matrix(data_file, 'dataX_train')
-    dataY_train = HDF5Matrix(data_file, 'dataY_train')
-    dataZ_train = HDF5Matrix(data_file, 'dataZ_train')
+    dataX_train = HDF5Matrix(data_file, 'dataX_train',start=0,end=60000)
+    dataY_train = HDF5Matrix(data_file, 'dataY_train',start=0,end=60000)
+    #dataZ_train = HDF5Matrix(data_file, 'dataZ_train',start=0,end=60000)
+    print("converting h5py to numpy...(only dataX Z  and dataY)")
+    dataX_train = np.array(dataX_train)
+    dataY_train = np.array(dataY_train)
+    #dataZ_train = np.array(dataZ_train)
+    return dataX_train, dataY_train
 
-    return dataX_train, dataY_train, dataZ_train
+
 def load5hpyTestData(data_name):
     """Load h5py data and return HDF5 object corresponding to X_test, Y_test
         Returns:
@@ -76,16 +81,23 @@ def load5hpyTestData(data_name):
         print("Reading test data from file..")
         dataX_test = hf['dataX_test']
         dataY_test = hf['dataY_test']
+        dataZ_test = hf['dataZ_test']
         print("dataX_test.shape:", dataX_test.shape)
         print("dataY_test.shape:", dataY_test.shape)
-
+        print("dataZ_test.shape:", dataZ_test.shape)
+        
     # Load data into HDF5Matrix object, which reads the file from disk and does not put it into RAM
     dataX_test = HDF5Matrix(data_file, 'dataX_test')
     dataY_test = HDF5Matrix(data_file, 'dataY_test')
-
-    return dataX_test, dataY_test
+    dataZ_test = HDF5Matrix(data_file, 'dataZ_test')
+    
+    print("converting h5py to numpy...")
+    dataX_test = np.array(dataX_test)
+    dataY_test = np.array(dataY_test)
+    dataZ_test = np.array(dataZ_test)
+    return dataX_test, dataY_test, dataZ_test
 #データベースから一つサンプルを取り出してデータセットの型を返す関数
-def returnH5PYDatasetDims(data_name='vis_train_dataX_dataY.h5'):
+def returnH5PYDatasetDims(data_name):
     """Load h5py data and return the dimensions of data in the dataet
             Returns:
                 frame_h (int): image height
